@@ -142,4 +142,40 @@ class TestHtmlAttrs < Minitest::Test
     result = attrs.smart_merge(class: 'text-white', data: { controller: 'tooltip', title: 'test' }).to_s
     assert_equal 'class="bg-primary-500 text-white" data-controller="popover tooltip" data-title="test"', result
   end
+
+  def test_as_html_attrs
+    hash_a = {
+      class: 'a b',
+      style: 'color: red;',
+      data: { a: 1, b: 2, d: 'x y', e: 'z', deep: { a: 'aa' } },
+      id: 'test',
+      unmergeable: { x: '1', y: 2, z: {} }
+    }
+
+    hash_b = {
+      class: 'c d',
+      style: 'color: blue;',
+      data: { b: 3, c: 4, d: 'e', f: 'zz', deep: { x: 'a', a: 'b' } },
+      id: 'test2',
+      unmergeable: { x: '2', y: 3, z: false },
+      z: { a: 1, b: {} }
+    }
+
+    result = hash_a.as_html_attrs.smart_merge(hash_b)
+
+    expected = {
+      class: 'a b c d', style: 'color: red; color: blue;',
+      data: { a: 1, b: 3, d: 'x y e', e: 'z', deep: { a: 'aa b', x: 'a' }, c: 4, f: 'zz' },
+      id: 'test2',
+      unmergeable: { x: '2', y: 3, z: false },
+      z: { a: 1, b: {} }
+    }.with_indifferent_access
+
+    assert result.is_a?(HtmlAttrs)
+    assert_equal expected, result
+
+    result = hash_a.as_html_attrs.smart_merge(nil)
+    assert result.is_a?(HtmlAttrs)
+    assert_equal hash_a.with_indifferent_access, result
+  end
 end

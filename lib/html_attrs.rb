@@ -102,3 +102,9 @@ class HtmlAttrs < HashWithIndifferentAccess
     @tag_helper ||= ActionView::Helpers::TagBuilder.new(nil)
   end
 end
+
+class Hash
+  def as_html_attrs
+    HtmlAttrs.new(self)
+  end
+end
