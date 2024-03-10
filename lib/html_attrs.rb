@@ -3,38 +3,6 @@
 require 'action_view'
 require 'active_support/core_ext/hash/indifferent_access'
 
-# A helper class to merge HTML attributes
-# By default, it will merge the following attributes
-#   class, style, data
-# Every thing else will be overwritten. You can configure this behavior to add more things to merge if needed.
-# Merge rules followed recursively:
-#  If atleast one of the value is a hash:
-#    Ensure other is a hash too or a falsy value
-#    Merge all unique keys
-#    If keys are present in only one, keep that value
-#    If keys are present in both, recursively merge the values
-#  Merge 2 arrays:
-#    Ensure other is an array too or a falsy value
-#    Concatenate them
-#  Merge 2 strings:
-#    Ensure other is a string too or a falsy value
-#    Concatenate them with a space
-#
-#  class: 'a b', class: 'c d' => class: 'a b c d'
-#  data: { a: 1, b: 2 }, data: { b: 3, c: 4 } => data: { a: 1, b: 3, c: 4 }
-#  data: { a: [1,2] }, data: { a: [3,4] } => data: { a: [1,2,3,4] }
-#  data:
-#
-#
-#
-# HtmlAttrs.smart_merge(hash_a, hash_b, hash_c)
-# HtmlAttrs.new({ class: 'test', data: { a: 3, b: 5 }).to_s
-# #=> "class='test' data-a='3' data-b='5'"
-# HtmlAttrs.new({ class: 'test', data: { a: 3, b: 5 }).merge(class: 'test2', data: { b: 6 })
-# #=> { class: 'test test2', data: { a: 3, b: "5 6" } }
-
-# html_attrs(class: 'test', data: { a: 3, b: 5}).smart_merge(some_external_input).to_s
-# merge_html_attrs(...)
 class HtmlAttrs < HashWithIndifferentAccess
   VERSION = '0.1.0'
   DEFAULT_MERGEABLE_ATTRIBUTES = %i[class style data].to_set

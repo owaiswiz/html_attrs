@@ -2,8 +2,7 @@
 
 A simple gem to merge HTML attributes in Ruby. It's incredibly useful when you're working with HTML attributes in a Rails app.
 
-For example, you're accepting arguments in a component or partial from somewhere else that you then need to merge smartly (can be tailwind classes, stimulus attributes, etc)
-
+For example, you're accepting arguments in a component or partial from somewhere else that you then need to merge smartly (can be tailwind classes, data attributes for stimulus controllers, etc)
 
 ## Installation
 
@@ -23,46 +22,76 @@ html_attrs = html_attrs.smart_merge(
   class: 'border border-primary-500', data: { controller: 'slideover' }, href: '#'
 )
 
-# You can use this in helpers that accept HTML attributes as a hash, e.g content_tag(:a, 'Hello', html_attrs)
-puts html_attrs
-# => { class: 'bg-primary-500 border border-primary-500', data: { controller: 'popover slideover', action: 'click->popover#toggle' }, href: '#' }
-
-
-# You can also use the `to_s` method to get the string representation of the HTML attributes, if you need to use it in a string context.
-puts html_attrs.to_s
-# => 'class="bg-primary-500 border border-primary-500" data-controller="popover slideover" data-action="click->popover#toggle" href="#"'
-# e.g, in an ERB template:
-# <a <%= html_attrs.to_s %> id='home'>Hello</a>
-# => <a class="bg-primary-500 border border-primary-500" data-controller="popover slideover" data-action="click->popover#toggle" href="#" id='home'>Hello</a>
+# Will produce:
+{
+  class: 'bg-primary-500 border border-primary-500',
+  data: { controller: 'popover slideover', action: 'click->popover#toggle' },
+  href: '#'
+}
 ```
+
+You can use this in helpers that accept HTML attributes as a hash, e.g:
+```erb
+<%= content_tag(:a, 'Hello', html_attrs) %>
+
+<%# Will produce: %>
+<a
+  class="bg-primary-500 border border-primary-500"
+  data-controller="popover slideover"
+  data-action="click->popover#toggle"
+  href="#"
+>
+  Hello
+</a>
+```
+
+
+You can also use the `to_s` method to get the string representation of the HTML attributes, if you need to use it in a string context.
+```erb
+<a <%= html_attrs.to_s %> id='home'>Hello</a>
+
+<%# Will produce: %>
+<a
+  class="bg-primary-500 border border-primary-500"
+  data-controller="popover slideover"
+  data-action="click->popover#toggle"
+  href="#"
+  id='home'
+>
+  Hello
+</a>
+```
+
 
 Alternative, you can use the `HtmlAttrs` class directly, e.g:
 ```ruby
-HtmlAttrs.smart_merge({ class: 'bg-primary-500', data: { controller: 'popover' } }, { id: 'test', class: 'border' })
+HtmlAttrs.smart_merge(
+  { class: 'bg-primary-500', data: { controller: 'popover' } },
+  { id: 'test', class: 'border' }
+)
 # => { class: 'bg-primary-500 border', data: { controller: 'popover' }, id: 'test' }
 ```
 
 Or, you can also instantiate a new `HtmlAttrs` object and use the `smart_merge` method, e.g:
 ```ruby
-html_attrs = HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help', download: 'test.jpeg')
+html_attrs = HtmlAttrs.new(class: 'bg-primary-500', data: { controller: 'popover' })
 # => { class: 'bg-primary-500', id: 'test', aria_label: 'Help', download: 'test.jpeg' }
-html_attrs.smart_merge(class: 'border', id: 'another', aria_label: 'Another', href: '/test')
-# => { class: 'bg-primary-500 border', id: 'another', aria_label: 'Help Another', download: 'test.jpeg', href: '/test' }
+
+html_attrs.smart_merge( id: 'test', class: 'border')
+# => { class: 'bg-primary-500 border', data: { controller: 'popover' }, id: 'test' }
 ```
 
-Merging is done recursively. Strings are merged by concatenating them with a space. Arrays are merged with simple concatenation. Hashes are merged recursively using the above rules.
+Under the hood, `HtmlAttrs` is a simple wrapper around `ActiveSupport::HashWithIndifferentAccess`, so you can use it just like any other hash. The only difference is `#smart_merge` and `to_s`.
 
-Very simple, yet very useful - especially if you're dealing with a lot of components/stimulus stuff where you often find yourself merging things manually.
+Merging is done recursively. Strings are merged by concatenating them with a space. Arrays are merged with simple concatenation. Hashes are merged recursively using the above rules. Everything else is merged normally, just like with `Hash#merge`. Super simple, but super powerful.
 
-## Advanced Usage
+## Configuring mergeable attributes
 
-You can also directly use the `smart_merge` method to merge hashes, e.g:
-
-By default, this gem merges `class`, `style` and `data` attributes recursively. Which should usually be more than enough. You can easily customize this by passing an array of attribute names to the smart_merge method, if you need to. e.g:
+By default, this gem merges `class`, `style` and `data` attributes recursively. Which should usually be more than enough. You can easily customize this by specifying `mergeable_attributes:` when calling `smart_merge`. e.g:
 ```ruby
-HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help', download: 'test.jpeg')
-  .smart_merge(class: 'bg-primary-100', id: 'another', aria_label: 'Another', href: '/test', mergeable_attributes: [:aria_label])
-# => { class: 'bg-primary-100', id: 'another', aria_label: 'Help Another', download: 'test.jpeg', href: '/test' }
+HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help')
+  .smart_merge(aria_label: 'Another', href: '/test', mergeable_attributes: [:aria_label])
+# => { class: 'bg-primary-500', id: 'test', aria_label: 'Help Another', href: '/test' }
 ```
 
 ## Development
