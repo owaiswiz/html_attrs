@@ -1,24 +1,69 @@
 # HtmlAttrs
 
-TODO: Delete this and the text below, and describe your gem
+A simple gem to merge HTML attributes in Ruby. It's incredibly useful when you're working with HTML attributes in a Rails app.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/html_attrs`. To experiment with that code, run `bin/console` for an interactive prompt.
+For example, you're accepting arguments in a component or partial from somewhere else that you then need to merge smartly (can be tailwind classes, stimulus attributes, etc)
+
 
 ## Installation
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
-
 Install the gem and add to the application's Gemfile by executing:
-
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
-
-If bundler is not being used to manage dependencies, install the gem by executing:
-
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+```shell
+$ bundle add html_attrs
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+html_attrs = {
+  class: 'bg-primary-500', data: { controller: 'popover', action: 'click->popover#toggle' }
+}.as_html_attrs
+
+html_attrs = html_attrs.smart_merge(
+  class: 'border border-primary-500', data: { controller: 'slideover' }, href: '#'
+)
+
+# You can use this in helpers that accept HTML attributes as a hash, e.g content_tag(:a, 'Hello', html_attrs)
+puts html_attrs
+# => { class: 'bg-primary-500 border border-primary-500', data: { controller: 'popover slideover', action: 'click->popover#toggle' }, href: '#' }
+
+
+# You can also use the `to_s` method to get the string representation of the HTML attributes, if you need to use it in a string context.
+puts html_attrs.to_s
+# => 'class="bg-primary-500 border border-primary-500" data-controller="popover slideover" data-action="click->popover#toggle" href="#"'
+# e.g, in an ERB template:
+# <a <%= html_attrs.to_s %> id='home'>Hello</a>
+# => <a class="bg-primary-500 border border-primary-500" data-controller="popover slideover" data-action="click->popover#toggle" href="#" id='home'>Hello</a>
+```
+
+Alternative, you can use the `HtmlAttrs` class directly, e.g:
+```ruby
+HtmlAttrs.smart_merge({ class: 'bg-primary-500', data: { controller: 'popover' } }, { id: 'test', class: 'border' })
+# => { class: 'bg-primary-500 border', data: { controller: 'popover' }, id: 'test' }
+```
+
+Or, you can also instantiate a new `HtmlAttrs` object and use the `smart_merge` method, e.g:
+```ruby
+html_attrs = HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help', download: 'test.jpeg')
+# => { class: 'bg-primary-500', id: 'test', aria_label: 'Help', download: 'test.jpeg' }
+html_attrs.smart_merge(class: 'border', id: 'another', aria_label: 'Another', href: '/test')
+# => { class: 'bg-primary-500 border', id: 'another', aria_label: 'Help Another', download: 'test.jpeg', href: '/test' }
+```
+
+Merging is done recursively. Strings are merged by concatenating them with a space. Arrays are merged with simple concatenation. Hashes are merged recursively using the above rules.
+
+Very simple, yet very useful - especially if you're dealing with a lot of components/stimulus stuff where you often find yourself merging things manually.
+
+## Advanced Usage
+
+You can also directly use the `smart_merge` method to merge hashes, e.g:
+
+By default, this gem merges `class`, `style` and `data` attributes recursively. Which should usually be more than enough. You can easily customize this by passing an array of attribute names to the smart_merge method, if you need to. e.g:
+```ruby
+HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help', download: 'test.jpeg')
+  .smart_merge(class: 'bg-primary-100', id: 'another', aria_label: 'Another', href: '/test', mergeable_attributes: [:aria_label])
+# => { class: 'bg-primary-100', id: 'another', aria_label: 'Help Another', download: 'test.jpeg', href: '/test' }
+```
 
 ## Development
 
