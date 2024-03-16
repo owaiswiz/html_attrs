@@ -85,6 +85,17 @@ Under the hood, `HtmlAttrs` is a simple wrapper around `ActiveSupport::HashWithI
 
 Merging is done recursively. Strings are merged by concatenating them with a space. Arrays are merged with simple concatenation. Hashes are merged recursively using the above rules. Everything else is merged normally, just like with `Hash#merge`. Super simple, but super powerful.
 
+<br/>
+
+## Interested in a powerful Rails UI library?
+
+I am working on a super-powerful Rails UI library - components as well as templates & patterns.
+
+[Please check this out if you're interested](https://owaiskhan.me/rails-ui-library).
+<br/>
+<br/>
+<br/>
+
 ## Configuring mergeable attributes
 
 By default, this gem merges `class`, `style` and `data` attributes recursively. Which should usually be more than enough. You can easily customize this by specifying `mergeable_attributes:` when calling `smart_merge`. e.g:
