@@ -4,7 +4,7 @@ require 'action_view'
 require 'active_support/core_ext/hash/indifferent_access'
 
 class HtmlAttrs < HashWithIndifferentAccess
-  VERSION = '0.1.0'
+  VERSION = '1.0.0'
   DEFAULT_MERGEABLE_ATTRIBUTES = %i[class style data].to_set
 
   def smart_merge(other)
