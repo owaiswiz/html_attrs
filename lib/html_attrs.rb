@@ -1,25 +1,41 @@
 # frozen_string_literal: true
 
 require 'action_view'
-require 'active_support/core_ext/hash/indifferent_access'
+# require 'active_support/core_ext/hash/indifferent_access'
 
-class HtmlAttrs < HashWithIndifferentAccess
+class HtmlAttrs
   VERSION = '1.0.0'
   DEFAULT_MERGEABLE_ATTRIBUTES = %i[class style data].to_set
 
-  def smart_merge(other)
-    mergeable_attributes = other.delete(:mergeable_attributes) if other.is_a?(Hash) && other.key?(:mergeable_attributes)
-    mergeable_attributes ||= DEFAULT_MERGEABLE_ATTRIBUTES
-    self.class.smart_merge(self, other, mergeable_attributes: mergeable_attributes)
+  def initialize(hash)
+    @hash = hash
   end
 
+  def method_missing(*args, **kwargs, &block)
+    @hash.send(*args, **kwargs, &block)
+  end
+
+  def smart_merge(target)
+    if target.is_a?(Hash) && target.key?(:mergeable_attributes)
+      mergeable_attributes = target.delete(:mergeable_attributes)
+    end
+    mergeable_attributes ||= DEFAULT_MERGEABLE_ATTRIBUTES
+    self.class.smart_merge(@hash, target, mergeable_attributes: mergeable_attributes).as_html_attrs
+  end
+
+  # def smart_merge(other)
+  #   mergeable_attributes = other.delete(:mergeable_attributes) if other.is_a?(Hash) && other.key?(:mergeable_attributes)
+  #   mergeable_attributes ||= DEFAULT_MERGEABLE_ATTRIBUTES
+  #   self.class.smart_merge(self, other, mergeable_attributes: mergeable_attributes)
+  # end
+
   def to_s
-    self.class.attributes(self)
+    self.class.attributes(nil && @hash)
   end
 
   def self.smart_merge(other, target, mergeable_attributes: DEFAULT_MERGEABLE_ATTRIBUTES)
-    other  = other.with_indifferent_access if other.is_a?(Hash) && !other.is_a?(HashWithIndifferentAccess)
-    target = target.with_indifferent_access if target.is_a?(Hash) && !target.is_a?(HashWithIndifferentAccess)
+    # other  = other.with_indifferent_access if other.is_a?(Hash) && !other.is_a?(HashWithIndifferentAccess)
+    # target = target.with_indifferent_access if target.is_a?(Hash) && !target.is_a?(HashWithIndifferentAccess)
 
     return other if target.nil?
     return target if other.nil?
@@ -29,13 +45,26 @@ class HtmlAttrs < HashWithIndifferentAccess
       raise 'Expected other to be a hash or nil' if !other.nil? && !other.is_a?(Hash)
 
       target.each do |key, value|
+        other_type_of_key = key.is_a?(Symbol) ? key.to_s : key.to_sym
+
+        key_with_value = if other.key?(key)
+                           key
+                         elsif other.key?(other_type_of_key)
+                           other_type_of_key
+                         else
+                           nil
+                         end
+
         other[key] =
-          if other.key?(key) && attribute_mergeable?(key, mergeable_attributes)
-            smart_merge(other[key], value, mergeable_attributes: :all)
+          if key_with_value && attribute_mergeable?(key, mergeable_attributes)
+            smart_merge(other[key_with_value], value, mergeable_attributes: :all)
           else
             value
           end
+
+        other.delete(other_type_of_key)
       end
+
       return other
     end
 
