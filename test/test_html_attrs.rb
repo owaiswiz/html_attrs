@@ -204,4 +204,39 @@ class TestHtmlAttrs < Minitest::Test
 
     assert_equal expected, result
   end
+
+  def test_smart_merge_all
+    hash_a = {
+      class: 'a b',
+      style: 'color: red;',
+      data: { z: 'test', e: { f: 'test 5' } },
+      id: 'test',
+      unmergeable: { x: '1', y: 2, z: {} }
+    }
+
+    hash_b = {
+      class: 'c d',
+      style: 'color: blue;',
+      data: { z: 'test 2', e: { f: 'test 6' } },
+      id: 'test2',
+      unmergeable: { x: '2', y: 3, z: { a: 3 } },
+      z: { a: 1, b: {} }
+    }
+
+    result = HtmlAttrs.smart_merge_all(hash_a, hash_b)
+
+    expected = {
+      class: 'a b c d',
+      style: 'color: red; color: blue;',
+      data: { z: 'test test 2', e: { f: 'test 5 test 6' } },
+      id: 'test test2',
+      unmergeable: { x: '1 2', y: 3, z: { a: 3 } },
+      z: { a: 1, b: {} }
+    }
+
+    assert_equal expected, result
+
+    result = hash_a.smart_merge_all(hash_b)
+    assert_equal expected, result
+  end
 end

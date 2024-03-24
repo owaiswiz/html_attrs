@@ -43,8 +43,11 @@ class HtmlAttrs < Hash
     return target if other.nil?
 
     if target.is_a?(Hash) || other.is_a?(Hash)
-      raise 'Expected target to be a hash or nil' if !target.nil? && !target.is_a?(Hash)
-      raise 'Expected other to be a hash or nil' if !other.nil? && !other.is_a?(Hash)
+      raise 'Expected target to be a hash or nil' unless target.is_a?(Hash)
+      raise 'Expected other to be a hash or nil' unless other.is_a?(Hash)
+
+      other = other.dup
+      target = target.dup
 
       target.each do |key, value|
         other_type_of_key = key.is_a?(Symbol) ? key.to_s : key.to_sym
@@ -69,15 +72,15 @@ class HtmlAttrs < Hash
     end
 
     if target.is_a?(Array) || other.is_a?(Array)
-      raise 'Expected target to be an array or nil' if !target.nil? && !target.is_a?(Array)
-      raise 'Expected other to be an array or nil' if !other.nil? && !other.is_a?(Array)
+      raise 'Expected target to be an array or nil' unless target.is_a?(Array)
+      raise 'Expected other to be an array or nil' unless other.is_a?(Array)
 
-      return (other || []).concat(target || [])
+      return (other.dup || []).concat(target.dup || [])
     end
 
     if target.is_a?(String) || other.is_a?(String)
-      raise 'Expected target to be a string or nil' if !target.nil? && !target.is_a?(String)
-      raise 'Expected other to be a string or nil' if !other.nil? && !other.is_a?(String)
+      raise 'Expected target to be a string or nil' unless target.is_a?(String)
+      raise 'Expected other to be a string or nil' unless other.is_a?(String)
 
       return [other.presence, target.presence].compact.join(' ')
     end
