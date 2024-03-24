@@ -16,7 +16,7 @@ $ bundle add html_attrs
 ```ruby
 html_attrs = {
   class: 'bg-primary-500', data: { controller: 'popover', action: 'click->popover#toggle' }
-}.as_html_attrs
+}
 
 html_attrs = html_attrs.smart_merge(
   class: 'border border-primary-500', data: { controller: 'slideover' }, href: '#'
@@ -28,6 +28,7 @@ html_attrs = html_attrs.smart_merge(
   data: { controller: 'popover slideover', action: 'click->popover#toggle' },
   href: '#'
 }
+# Note: #smart_merge returns an HtmlAttrs object which is a subclass of Hash, so you can use it just like a hash.
 ```
 
 You can use this in helpers that accept HTML attributes as a hash, e.g:
@@ -62,7 +63,35 @@ You can also use the `to_s` method to get the string representation of the HTML 
 </a>
 ```
 
+Merging is done recursively:
+ * Strings are merged by concatenating them with a space.
+ * Arrays are merged with simple concatenation.
+ * Hashes are merged recursively using the above rules.
+ * Everything else is merged normally, just like with `Hash#merge`.
 
+Super simple, but super powerful.
+
+If one hash that has a string key and the other has a symbol key or vice-versa, we'll convert everything to whatever the first hash has.
+
+## Configuring mergeable attributes
+
+By default, this gem merges `class`, `style` and `data` attributes recursively. Which should usually be more than enough. You can easily customize this by specifying `mergeable_attributes:` when calling `smart_merge`. e.g:
+```ruby
+HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help')
+  .smart_merge(aria_label: 'Another', href: '/test', mergeable_attributes: [:aria_label])
+# => { class: 'bg-primary-500', id: 'test', aria_label: 'Help Another', href: '/test' }
+```
+
+You can also just set `mergeable_attributes: :all` to merge everything. Or you can just use `smart_merge_all` which merges everything by default.
+
+```ruby
+{ class: 'bg-primary-500', id: 'test', aria_label: 'Help' }
+  .smart_merge_all(class: 'text-red-500', aria_label: 'Another', href: '/test')
+# => { class: 'bg-primary-500 text-red-500', id: 'test', aria_label: 'Help Another', href: '/test' }
+```
+
+
+## Other ways to use
 Alternative, you can use the `HtmlAttrs` class directly, e.g:
 ```ruby
 HtmlAttrs.smart_merge(
@@ -81,9 +110,7 @@ html_attrs.smart_merge( id: 'test', class: 'border')
 # => { class: 'bg-primary-500 border', data: { controller: 'popover' }, id: 'test' }
 ```
 
-Under the hood, `HtmlAttrs` is a simple wrapper around `ActiveSupport::HashWithIndifferentAccess`, so you can use it just like any other hash. The only difference is `#smart_merge` and `to_s`.
-
-Merging is done recursively. Strings are merged by concatenating them with a space. Arrays are merged with simple concatenation. Hashes are merged recursively using the above rules. Everything else is merged normally, just like with `Hash#merge`. Super simple, but super powerful.
+Under the hood, `HtmlAttrs` is a simple wrapper around `Hash`, so you can use it just like any other hash. The only difference is `#smart_merge`, `#smart_merge_all` and `to_s`.
 
 <br/>
 
@@ -95,15 +122,6 @@ I am working on a super-powerful Rails UI library - components as well as templa
 <br/>
 <br/>
 <br/>
-
-## Configuring mergeable attributes
-
-By default, this gem merges `class`, `style` and `data` attributes recursively. Which should usually be more than enough. You can easily customize this by specifying `mergeable_attributes:` when calling `smart_merge`. e.g:
-```ruby
-HtmlAttrs.new(class: 'bg-primary-500', id: 'test', aria_label: 'Help')
-  .smart_merge(aria_label: 'Another', href: '/test', mergeable_attributes: [:aria_label])
-# => { class: 'bg-primary-500', id: 'test', aria_label: 'Help Another', href: '/test' }
-```
 
 ## Development
 

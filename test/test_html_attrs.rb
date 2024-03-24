@@ -33,7 +33,7 @@ class TestHtmlAttrs < Minitest::Test
       id: 'test2',
       unmergeable: { x: '2', y: 3, z: false },
       z: { a: 1, b: {} }
-    }.with_indifferent_access
+    }
 
     assert_equal expected, result
   end
@@ -65,7 +65,7 @@ class TestHtmlAttrs < Minitest::Test
       id: 'test test2',
       unmergeable: { x: '1 2', y: 3, z: { a: 3 } },
       z: { a: 1, b: {} }
-    }.with_indifferent_access
+    }
 
     assert_equal expected, result
   end
@@ -75,19 +75,19 @@ class TestHtmlAttrs < Minitest::Test
     assert_nil result, nil
 
     result = HtmlAttrs.smart_merge({ class: 'test' }, nil)
-    expected = { class: 'test' }.with_indifferent_access
+    expected = { class: 'test' }
     assert_equal expected, result
 
     result = HtmlAttrs.smart_merge(nil, { class: 'test' })
-    expected = { class: 'test' }.with_indifferent_access
+    expected = { class: 'test' }
     assert_equal expected, result
 
     result = HtmlAttrs.smart_merge({ id: 'test2' }, { class: 'test' })
-    expected = { id: 'test2', class: 'test' }.with_indifferent_access
+    expected = { id: 'test2', class: 'test' }
     assert_equal expected, result
 
     result = HtmlAttrs.smart_merge({ class: 'test3', id: 'test2' }, { class: 'test' })
-    expected = { class: 'test3 test', id: 'test2' }.with_indifferent_access
+    expected = { class: 'test3 test', id: 'test2' }
     assert_equal expected, result
   end
 
@@ -117,23 +117,23 @@ class TestHtmlAttrs < Minitest::Test
       id: 'test2',
       unmergeable: { x: '2', y: 3, z: false },
       z: { a: 1, b: {} }
-    }.with_indifferent_access
+    }
 
     assert result.is_a?(HtmlAttrs)
     assert_equal expected, result
 
     result = HtmlAttrs.new(hash_a).smart_merge(nil)
     assert result.is_a?(HtmlAttrs)
-    assert_equal hash_a.with_indifferent_access, result
+    assert_equal hash_a, result
 
     result = HtmlAttrs.new(nil).smart_merge(hash_b)
     assert result.is_a?(HtmlAttrs)
-    assert_equal hash_b.with_indifferent_access, result
+    assert_equal hash_b, result
   end
 
   def test_passing_kwargs
     result = HtmlAttrs.new(class: 'test', data: 'a', x: 3).smart_merge(class: 'test2', id: 'd3', x: 4)
-    expected = { class: 'test test2', data: 'a', x: 4, id: 'd3' }.with_indifferent_access
+    expected = { class: 'test test2', data: 'a', x: 4, id: 'd3' }
     assert_equal expected, result
   end
 
@@ -169,14 +169,14 @@ class TestHtmlAttrs < Minitest::Test
       id: 'test2',
       unmergeable: { x: '2', y: 3, z: false },
       z: { a: 1, b: {} }
-    }.with_indifferent_access
+    }
 
     assert result.is_a?(HtmlAttrs)
     assert_equal expected, result
 
     result = hash_a.as_html_attrs.smart_merge(nil)
     assert result.is_a?(HtmlAttrs)
-    assert_equal hash_a.with_indifferent_access, result
+    assert_equal hash_a, result
   end
 
   def test_smart_merge_with_indifferent_access
@@ -188,7 +188,8 @@ class TestHtmlAttrs < Minitest::Test
 
     hash_b = {
       data: { 'd': 'e f', e: 'i', y: 'b' },
-      'id' => 'test2'
+      'id' => 'test2',
+      'zop' => nil
     }
     hash_b['class'] = 'c d'
 
@@ -197,9 +198,45 @@ class TestHtmlAttrs < Minitest::Test
     expected = {
       class: 'a b c d',
       data: { d: 'x y e f', e: 'i i', z: 'a', y: 'b' },
-      id: 'test2'
-    }.with_indifferent_access
+      id: 'test2',
+      'zop' => nil
+    }
 
+    assert_equal expected, result
+  end
+
+  def test_smart_merge_all
+    hash_a = {
+      class: 'a b',
+      style: 'color: red;',
+      data: { z: 'test', e: { f: 'test 5' } },
+      id: 'test',
+      unmergeable: { x: '1', y: 2, z: {} }
+    }
+
+    hash_b = {
+      class: 'c d',
+      style: 'color: blue;',
+      data: { z: 'test 2', e: { f: 'test 6' } },
+      id: 'test2',
+      unmergeable: { x: '2', y: 3, z: { a: 3 } },
+      z: { a: 1, b: {} }
+    }
+
+    result = HtmlAttrs.smart_merge_all(hash_a, hash_b)
+
+    expected = {
+      class: 'a b c d',
+      style: 'color: red; color: blue;',
+      data: { z: 'test test 2', e: { f: 'test 5 test 6' } },
+      id: 'test test2',
+      unmergeable: { x: '1 2', y: 3, z: { a: 3 } },
+      z: { a: 1, b: {} }
+    }
+
+    assert_equal expected, result
+
+    result = hash_a.smart_merge_all(hash_b)
     assert_equal expected, result
   end
 end
