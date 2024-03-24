@@ -178,4 +178,28 @@ class TestHtmlAttrs < Minitest::Test
     assert result.is_a?(HtmlAttrs)
     assert_equal hash_a.with_indifferent_access, result
   end
+
+  def test_smart_merge_with_indifferent_access
+    hash_a = {
+      class: 'a b',
+      data: { d: 'x y', e: 'i', z: 'a' },
+      id: 'test'
+    }
+
+    hash_b = {
+      data: { 'd': 'e f', e: 'i', y: 'b' },
+      'id' => 'test2'
+    }
+    hash_b['class'] = 'c d'
+
+    result = HtmlAttrs.smart_merge(hash_a, hash_b)
+
+    expected = {
+      class: 'a b c d',
+      data: { d: 'x y e f', e: 'i i', z: 'a', y: 'b' },
+      id: 'test2'
+    }.with_indifferent_access
+
+    assert_equal expected, result
+  end
 end
