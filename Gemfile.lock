@@ -1,9 +1,8 @@
 PATH
   remote: .
   specs:
-    html_attrs (0.1.0)
+    html_attrs (1.1.0)
       actionview (>= 6.0)
-      activesupport (>= 6.0)
 
 GEM
   remote: https://rubygems.org/
