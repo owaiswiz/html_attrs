@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 require 'action_view'
+require 'bigdecimal' # tag_options references BigDecimal. Just require it here so non autoloading environments work.
 
 class HtmlAttrs < Hash
-  VERSION = '1.1.0'
+  VERSION = '1.1.1'
   DEFAULT_MERGEABLE_ATTRIBUTES = %i[class style data].to_set
 
   def initialize(constructor = nil)
