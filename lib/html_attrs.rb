@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require 'action_view'
-require 'bigdecimal' # tag_options references BigDecimal. Just require it here so non autoloading environments work.
+require 'active_support'
+require 'active_support/core_ext/object/json.rb'
 
 class HtmlAttrs < Hash
-  VERSION = '1.1.1'
+  VERSION = '1.1.2'
   DEFAULT_MERGEABLE_ATTRIBUTES = %i[class style data].to_set
 
   def initialize(constructor = nil)
