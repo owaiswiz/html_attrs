@@ -179,7 +179,7 @@ class TestHtmlAttrs < Minitest::Test
     assert_equal hash_a, result
   end
 
-  def test_smart_merge_with_indifferent_access
+  def test_smart_merge_with_symbol_string_keys_conflict
     hash_a = {
       class: 'a b',
       data: { d: 'x y', e: 'i', z: 'a' },
@@ -202,6 +202,21 @@ class TestHtmlAttrs < Minitest::Test
       'zop' => nil
     }
 
+    assert_equal expected, result
+  end
+
+  def test_smart_merge_with_indifferent_access
+    require 'active_support'
+    require 'active_support/core_ext/hash/indifferent_access'
+    hash_a = {
+      class: 'a b'
+    }.with_indifferent_access
+
+    result = hash_a.smart_merge(class: 'c d')
+
+    expected = {
+      'class' => 'a b c d'
+    }
     assert_equal expected, result
   end
 
